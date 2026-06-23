@@ -74,6 +74,7 @@ global converter_int16_para_str
 global converter_int32_para_str
 global converter_str_para_int_16
 global converter_str_para_int_32
+global sair
 
 
 extern soma
@@ -181,21 +182,35 @@ loop_menu:
     jmp loop_menu
 
 
-
 ;==========================
 ;   Opcoes
 ;==========================
 
 opcao_soma:
-    call soma
+    ; passanado o valor da precisao
+    push dword 2
+    push dword precisao_usuario
+
+    call soma       ; eax = resultado da soma
+    add esp,8
     jmp loop_menu
 
 opcao_mult:
-    call multi
+    ; passanado o valor da precisao
+    push dword 2
+    push dword precisao_usuario
+
+    call multi      ; eax = resultado da multiplicacao
+    add esp,8
     jmp loop_menu
 
 opcao_exponenciacao:
-    call exponenciacao
+    ; passanado o valor da precisao
+    push dword 2
+    push dword precisao_usuario
+
+    call exponenciacao  ; eax = resultado da exponenciacao
+    add esp,8
     jmp loop_menu
 
 
@@ -203,6 +218,13 @@ opcao_exponenciacao:
 ;==========================
 ;   Input/Output
 ;==========================
+
+
+mostrar_resultado:
+    ; Funcao para mostrar o resultado das operacoes 
+
+
+    ret 
 
 mostrar_menu:
     ; Funcao responsavel por mostrar as opcoes do menu
