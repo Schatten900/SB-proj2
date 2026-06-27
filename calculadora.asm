@@ -187,30 +187,115 @@ loop_menu:
 ;==========================
 
 opcao_soma:
-    ; passanado o valor da precisao
-    push dword 2
-    push dword precisao_usuario
 
-    call soma       ; eax = resultado da soma
+    ; Pega os dois valores de soma e bota na pilha
+
+    cmp byte[precisao_usuario],'0'
+    je opcao_soma16
+
+    ; Realiza operacao com 32 bits
+    call ler_int32
+    push eax        ; salva primeiro valor na pilha
+
+    call ler_int32  
+    push eax        ; salva segundo valor na pilha
+
+    call soma32       ; eax = resultado da soma
+
     add esp,8
+
+
+    mostrar_resultado
     jmp loop_menu
+
+
+opcao_soma16:
+
+    call ler_int16
+    push eax            ; salva num1
+
+    call ler_int16
+    push eax            ; salva num2
+
+    call soma16         ; eax = resultado da soma
+
+    add esp,8
+
+
+    mostrar_resultado
+    jmp loop_menu
+
 
 opcao_mult:
     ; passanado o valor da precisao
-    push dword 2
-    push dword precisao_usuario
 
-    call multi      ; eax = resultado da multiplicacao
-    add esp,8
+    cmp byte[precisao_usuario],'0'
+    je opcao_mult16
+
+    ; Realiza a multiplicacao com 32 bits
+
+    call ler_int32
+    push eax        ; num1
+
+    call ler_int32
+    push eax        ; num2
+
+    call multi32      ; eax = resultado da multiplicacao
+
+    add esp,12
+
+
+    mostrar_resultado
     jmp loop_menu
+
+
+opcao_mult16:
+
+    call ler_int16
+    push eax        ; num1
+
+    call ler_int16
+    push eax        ; num2
+
+    call multi16    ; eax = resultado da multiplicacao
+
+    add esp,8
+
+    mostrar_resultado
+    jmp loop_menu
+
 
 opcao_exponenciacao:
     ; passanado o valor da precisao
-    push dword 2
-    push dword precisao_usuario
+    cmp byte[precisao_usuario], '0'
+    je opcao_exponenciacao_16
 
-    call exponenciacao  ; eax = resultado da exponenciacao
+    ; Realiza a operacao com 32 bits
+
+    call ler_int32
+    push eax            ; salva a base
+
+    call ler_int32      
+    push eax            ; salva o expoente
+
+    call exponenciacao32  ; eax = resultado da exponenciacao
     add esp,8
+
+    mostrar_resultado
+    jmp loop_menu
+
+opcao_exponenciacao_16:
+
+    call ler_int16
+    push eax            ; salva a base
+
+    call ler_int16      
+    push eax            ; salva o expoente
+
+    call exponenciacao16
+    add esp 8
+
+    mostrar_resultado
     jmp loop_menu
 
 
@@ -222,7 +307,15 @@ opcao_exponenciacao:
 
 mostrar_resultado:
     ; Funcao para mostrar o resultado das operacoes 
+    ; Resultado esta contido em EAX, logo deve-se converter EAX para STR e mostrar
 
+    push eax                ; Carrega o valor de resultado para pilha
+
+    call converter_int32_para_str ; EAX = str(resultado)
+
+    push dword 32           ; Passa o tamanho de EAX
+    push EAX                ; Passa a str que esta em EAX
+    call mostrar_texto
 
     ret 
 

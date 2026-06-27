@@ -1,64 +1,47 @@
 section .data
 
-texto_overflow db "OCORREU OVERFLOW",10
-tam_texto_overflow equ $- texto_overflow 
-
-
-texto_expoente_negativo db "EXPOENTE NEGATIVO",10
-tam_texto_expoente_negativo equ $- texto_expoente_negativo 
-
 section .text
 
-
-global exponenciacao
-extern ler_int16
-extern ler_int32
+global exponenciacao32
+global exponenciacao16
 extern mostrar_texto
+extern multi16
+extern multi32
+extern sair
 
 
-exponenciacao:
+exponenciacao32:
 
     push ebp    ; Salva o endereço de retorno
 
     mov ebp, esp   ; Passa o valor do topo da pilha pra base
 
-    mov ecx, [ebp+8]    ; Passa o valor de precisao
-
-    cmp byte[ecx], '0'
-    je exponenciacao_16
-
     ; Realiza a exponenciacao de 32 bits
 
-    ; ideia de algoritimo pegar numero(base) e o expoente
-    ; loop para decrementar expoente ate que seja 0 
-    ; Para cada iteracao multiplicar o resultado atual pelo valor base, logo eax = resultado * anterior * qntd vezes
-    ; Pode-se pensar em armazenar o valor atual do topo da pilha pelo valor base pego (pode estar em esi) e o expoente em ebx 
+    mov esi,[ebp+8]     ; esi = expoente 
 
-    call ler_int32
-    push eax        ; salva eax = base na pilha
+    cmp esi,0           
+    je expoente_zero_32 ; Se o expoente for 0, retornar o valor 1
 
-    call ler_int32  
-    mov esi, eax    ; esi = expoente
+    jl expoente_negativo32 ; Se expoente negativo depende da base pro retornor ser 0 ou 1
 
-    cmp esi,0       ; Verifica expoente negativo
-    jl expoente_negativo_32
+    mov eax,[ebp+12]    ; eax = base (sera modificado)
+    mov ebx,eax         ; ebx = base
 
-    cmp esi,0       ; Se o expoente for 0, retornar o valor 1
-    je expoente_zero_32
-
-    pop eax         ; recupera o valor de eax
-    mov ebx,eax     ; passa o valor da base para ebx
-
-    dec esi         ; A fim de evitar multiplicacao a mais
+    dec esi             ; A fim de evitar multiplicacao a mais
 
 
 loop_exponenciacao_32:
 
     cmp esi,0
-    je fim_exponenciaccao
+    je fim_exponenciacao   
     
-    imul ebx    ; eax * ebx -> atual * base 
-    jo overflow ; verifica overflow
+    push eax    ; Salva o valor atual
+    push ebx    ; Salva a base 
+
+    call multi32 ; Realiza a multiplicacao
+    add esp,8   ; Desempilha os dados
+    
     dec esi     ; expoente -= 1
 
     jmp loop_exponenciacao_32
@@ -68,36 +51,37 @@ loop_exponenciacao_32:
 ;   Operacao com 16
 ;=======================
 
-exponenciacao_16:
+exponenciacao16:
 
+    push ebp
+    mov ebp,esp
 
-    call ler_int16          ; eax = valor lido
-    push eax                ; Salva o valor da base eax na pilha
-
-    call ler_int16          ; eax = expoente lido
-    mov esi, eax            ; esi = expoente lido
-
-
-    cmp esi,0               ; Verifica expoente negativo
-    jl expoente_negativo_16
+    mov esi,[ebp+8]         ; Passa o expoente
 
     cmp esi,0               ; Se o expoente for 0, retornar o valor 1
     je expoente_zero_16
 
-    pop eax                 ; recupera valor da base
+    jl expoente_negativo16    ; Se o expoente for negativo depende da base
 
-    mov bx,ax               ; passa a base para ebx
+    mov ax,[ebp+12]         ; ax = base
+
+    mov bx,ax               ; bx = base 
 
     dec esi                 ; A fim de evitar multiplicacao a mais
-    
+
 
 loop_exponenciacao_16:
 
     cmp esi,0           ; Verifica se o expoente ja é 0
     je sair_loop_16
 
-    imul bx        ; atual * base
-    jo overflow    ; verifica overflow
+    ; Chama a multiplicacao de 16 bits
+    push ax         ; Salva o valor atual
+    push bx         ; Salva a base 
+
+    call multi16    ; Realiza a multiplicacao
+    add esp,8       ; Desempilha os dados
+
     dec esi        ; expoente -= 1
 
     jmp loop_exponenciacao_16
@@ -106,56 +90,81 @@ loop_exponenciacao_16:
 sair_loop_16:
 
     movsx eax,ax   ; passa o valor de ax para eax
+    jmp fim_exponenciacao
 
 
-fim_exponenciaccao:
 
-    ; Faz a descarga do endereço de retorno
-    mov esp,ebp
-    pop ebp
-
-    ret
+;========================
+;   Expoente negativo
+;========================
 
 
+expoente_negativo32: 
+
+    ; Se expoente negativo retornar 0, 
+    ; Exceção somente se base for 1, onde temos duas possibilidades, base 1 expoente par -> positivo e expoente impar -> negativo
+    ; esi = expoente, eax = resultado ebx = base
+    mov eax,[ebp+12]    ; base
+    jmp trata_base
+
+expoente_negativo16:
+    movsx eax,[ebp+12]  ; base
+
+trata_base:
+
+    cmp eax,1           ; if (base == 1) retornar um
+    je retorno_um
+
+    cmp eax,-1          ; if (base == -1) verificar paridade do expoente
+    je retorno_menos_um
+
+    xor eax,eax         ; Se nao for nenhum dos dois casos, entao resposta é 0 
+    jmp fim_exponenciacao   
+
+
+retorno_um:
+    mov eax,1
+    jmp fim_exponenciacao
+
+
+retorno_menos_um:
+    
+    test esi,1      ; verifica a paridade 
+    jz menos_um_par
+
+    mov eax,-1
+    jmp fim_exponenciacao
+
+
+menos_um_par:
+    mov eax,1
+    jmp fim_exponenciacao
+
+
+
+;======================================================
 
 ;========================
 ;   Tratamento de erros
 ;========================
 
 
-expoente_negativo_32:
-    pop eax      ; remove a base empilhada
-    jmp erro
-
 expoente_zero_32:
-    pop eax      ; remove a base empilhada
-    mov eax,1    ; Passa 1 para resposta
-    jmp fim_exponenciaccao
 
-expoente_negativo_16:
-    pop eax      ; remove a base empilhada
-    jmp erro
+    mov eax,1    ; Passa 1 para resposta
+    jmp fim_exponenciacao
+
 
 expoente_zero_16:
-    pop eax      ; remove a base empilhada
+
     mov eax,1    ; Passa 1 para resposta
-    jmp fim_exponenciaccao
-
-erro:
-
-    push dword tam_texto_expoente_negativo
-    push dword texto_expoente_negativo
-    call mostrar_texto
-    add esp, 8 
-
-    jmp sair
+    jmp fim_exponenciacao
 
 
-overflow:
+fim_exponenciacao:
 
-    push dword tam_texto_overflow
-    push dword texto_overflow
-    call mostrar_texto
-    add esp, 8      ; Desempilha os dados
+    ; Faz a descarga do endereço de retorno
+    mov esp,ebp
+    pop ebp
 
-    jmp sair
+    ret

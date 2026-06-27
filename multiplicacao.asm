@@ -6,45 +6,37 @@ tam_texto_overflow equ $- texto_overflow
 
 section .text
 
-global multi
-extern ler_int16
-extern ler_int32
+global multi16
+global multi32
+extern sair
 extern mostrar_texto
 
-multi:
+multi32:
     
     push ebp                ; Carrega o endereço de retorno
     mov ebp,esp             ; Prepara a stack para as operacoes
 
-    mov ecx, [ebp+8]        ; Pega a precisao
-
-    cmp byte[ecx],'0'
-    je multi_16 
-
     ; Realiza a multiplicacao 32 bits
 
-    call ler_int32         ; eax = valor lido
-    mov ebx, eax           ; ebx = valor lido
+    mov eax,[ebp+8]     ; eax = num2
 
-    call ler_int32          
-    imul ebx            ; EDX:EAX = produto completo
+    imul [ebp+12]       ; EDX:EAX = produto completo
     jo overflow         ; Verifica se houve um overflow
 
     jmp fim_multi
 
 
-multi_16:
+multi16:
 
-    call ler_int16         ; eax = valor lido
-    push eax               ; Salva o valor de eax na pilha
+    push ebp                ; Carrega o endereço de endereço
+    mov ebp,esp             ; Prepara o ebp para as operacoes
 
-    call ler_int16
+    mov ax,[ebp+8]          ; ax = num2
 
-    pop ebx                 ; pega o valor do valor lido
-    imul bx                 ; DX:AX = produto completo de 64 bits
+    imul [ebp+12]           ; DX:AX = produto completo de 64 bits
     jo overflow             ; Verifica se houve um overflow
 
-    movsx eax,ax              ; passa o valor de ax para eax
+    movsx eax,ax            ; passa o valor de ax para eax
 
 
 fim_multi:
