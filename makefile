@@ -3,7 +3,7 @@ ASMFLAGS=-f elf32
 LD=ld
 LDFLAGS=-m elf_i386
 
-OBJ=CALCULADORA.o SOMA.o SUBTRACAO.o MULTIPLICACAO.o DIVISAO.o MOD.o EXPONENCIACAO.o
+OBJ=calculadora.o soma.o subtracao.o multiplicacao.o divisao.o mod.o exponenciacao.o
 
 calculadora: $(OBJ)
 	$(LD) $(LDFLAGS) $(OBJ) -o calculadora

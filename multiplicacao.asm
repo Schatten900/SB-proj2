@@ -20,7 +20,7 @@ multi32:
 
     mov eax,[ebp+8]     ; eax = num2
 
-    imul [ebp+12]       ; EDX:EAX = produto completo
+    imul dword [ebp+12]       ; EDX:EAX = produto completo
     jo overflow         ; Verifica se houve um overflow
 
     jmp fim_multi
@@ -33,7 +33,7 @@ multi16:
 
     mov ax,[ebp+8]          ; ax = num2
 
-    imul [ebp+12]           ; DX:AX = produto completo de 64 bits
+    imul word [ebp+12]           ; DX:AX = produto completo de 64 bits
     jo overflow             ; Verifica se houve um overflow
 
     movsx eax,ax            ; passa o valor de ax para eax
