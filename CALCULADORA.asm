@@ -63,7 +63,7 @@ menu_opcao: resb 2
 section .text
 
 ; ==================
-; Imports
+; Globals
 ; ==================
 global _start
 global mostrar_texto
@@ -76,10 +76,21 @@ global converter_str_para_int_16
 global converter_str_para_int_32
 global sair
 
-
-extern soma
-extern multi
-extern exponenciacao
+; ==================
+; Imports
+; ==================
+extern soma16
+extern soma32
+extern multi16
+extern multi32
+extern exponenciacao16
+extern exponenciacao32
+extern subtracao16
+extern subtracao32
+extern divisao16
+extern divisao32
+extern mod16
+extern mod32
 
 ; ==================
 ; Função principal
@@ -170,11 +181,20 @@ loop_menu:
     cmp byte [menu_opcao], '1' 
     je opcao_soma
     
+    cmp byte [menu_opcao], '2'
+    je opcao_subtracao
+
     cmp byte [menu_opcao], '3'
     je opcao_mult
 
+    cmp byte [menu_opcao], '4'
+    je opcao_divisao
+
     cmp byte [menu_opcao], '5'
     je opcao_exponenciacao
+
+    cmp byte [menu_opcao], '6'
+    je opcao_mod
 
     cmp byte [menu_opcao], '7'
     je sair
@@ -204,8 +224,7 @@ opcao_soma:
 
     add esp,8
 
-
-    mostrar_resultado
+    call mostrar_resultado
     jmp loop_menu
 
 
@@ -221,8 +240,45 @@ opcao_soma16:
 
     add esp,8
 
+    call mostrar_resultado
+    jmp loop_menu
 
-    mostrar_resultado
+
+opcao_subtracao:
+    ; passando o valor da precisao
+
+    cmp byte[precisao_usuario],'0'
+    je opcao_subtracao16
+
+    ; Realiza a subtracao com 32 bits
+
+    call ler_int32
+    push eax        ; num1
+
+    call ler_int32
+    push eax        ; num2
+
+    call subtracao32      ; eax = resultado da subtracao
+
+    add esp,8
+
+    call mostrar_resultado
+    jmp loop_menu
+
+
+opcao_subtracao16:
+
+    call ler_int16
+    push eax        ; num1
+
+    call ler_int16
+    push eax        ; num2
+
+    call subtracao16    ; eax = resultado da subtracao
+
+    add esp,8
+
+    call mostrar_resultado
     jmp loop_menu
 
 
@@ -244,8 +300,7 @@ opcao_mult:
 
     add esp,12
 
-
-    mostrar_resultado
+    call mostrar_resultado
     jmp loop_menu
 
 
@@ -261,7 +316,83 @@ opcao_mult16:
 
     add esp,8
 
-    mostrar_resultado
+    call mostrar_resultado
+    jmp loop_menu
+
+
+opcao_divisao:
+    ; passando o valor da precisao
+
+    cmp byte[precisao_usuario],'0'
+    je opcao_divisao16
+
+    ; Realiza a divisao com 32 bits
+
+    call ler_int32
+    push eax        ; num1
+
+    call ler_int32
+    push eax        ; num2
+
+    call divisao32      ; eax = resultado da divisao
+
+    add esp,8
+
+    call mostrar_resultado
+    jmp loop_menu
+
+
+opcao_divisao16:
+
+    call ler_int16
+    push eax        ; num1
+
+    call ler_int16
+    push eax        ; num2
+
+    call divisao16    ; eax = resultado da divisao
+
+    add esp,8
+
+    call mostrar_resultado
+    jmp loop_menu
+
+
+opcao_mod:
+    ; passando o valor da precisao
+
+    cmp byte[precisao_usuario],'0'
+    je opcao_mod16
+
+    ; Realiza o mod com 32 bits
+
+    call ler_int32
+    push eax        ; num1
+
+    call ler_int32
+    push eax        ; num2
+
+    call mod32      ; eax = resultado do mod
+
+    add esp,8
+
+    call mostrar_resultado
+    jmp loop_menu
+
+
+opcao_mod16:
+
+    call ler_int16
+    push eax        ; num1
+
+    call ler_int16
+    push eax        ; num2
+
+    call mod16    ; eax = resultado do mod
+
+    add esp,8
+
+    call mostrar_resultado
     jmp loop_menu
 
 
@@ -281,7 +412,7 @@ opcao_exponenciacao:
     call exponenciacao32  ; eax = resultado da exponenciacao
     add esp,8
 
-    mostrar_resultado
+    call mostrar_resultado
     jmp loop_menu
 
 opcao_exponenciacao_16:
@@ -293,9 +424,9 @@ opcao_exponenciacao_16:
     push eax            ; salva o expoente
 
     call exponenciacao16
-    add esp 8
+    add esp, 8
 
-    mostrar_resultado
+    call mostrar_resultado
     jmp loop_menu
 
 
@@ -450,58 +581,172 @@ mostrar_texto:
 ;==========================
 
 converter_int16_para_str:
-    ; Realiza a conversão do int16 para str para mostrar ao usuario
-
-
-
+    ; Converte int16 (em EAX) para string
+    ; Retorna ponteiro para a string em EAX
+    push ebp
+    mov ebp, esp
+    sub esp, 20
+    
+    mov eax, [ebp+8]    ; EAX = valor a converter
+    lea edi, [ebp-16]   ; EDI = buffer para a string
+    mov ecx, 0          ; contador de dígitos
+    mov ebx, 10         ; divisor
+    
+    ; Verificar se é negativo
+    cmp eax, 0
+    jge converter_int16_positivo
+    
+    mov byte [edi], '-'
+    inc edi
+    neg eax
+    
+converter_int16_positivo:
+    ; Dividir por 10 e colocar dígitos na pilha
+    mov ecx, 0
+    lea esi, [edi+10]   ; ESI aponta para o final do buffer
+    
 converter_int16_para_str_loop:
-
-
-
+    mov edx, 0
+    div ebx             ; EAX = EAX / 10, EDX = EAX % 10
+    add dl, '0'         ; Converter para ASCII
+    mov byte [esi-1], dl
+    dec esi
+    inc ecx
+    cmp eax, 0
+    jne converter_int16_para_str_loop
+    
+    ; Copiar a string para o início do buffer
+    lea edi, [ebp-16]
+    mov eax, esi
+    mov ebx, ecx
+    
 converter_int16_para_str_fim:
+    mov eax, esi        ; Retorna ponteiro para a string
+    mov esp, ebp
+    pop ebp
     ret 
 
 ;==============================================================================================
 
 converter_int32_para_str:
-    ; Realiza a conversão do int para str para mostrar ao usuario
-
-
-
+    ; Converte int32 (em EAX) para string
+    ; Retorna ponteiro para a string em EAX
+    push ebp
+    mov ebp, esp
+    sub esp, 36         ; Espaço para buffer de até 12 dígitos + '-'
+    
+    mov eax, [ebp+8]    ; EAX = valor a converter
+    lea edi, [ebp-32]   ; EDI = buffer para a string
+    mov ebx, 10         ; divisor
+    
+    ; Verificar se é negativo
+    cmp eax, 0
+    jge converter_int32_positivo
+    
+    mov byte [edi], '-'
+    inc edi
+    neg eax
+    
+converter_int32_positivo:
+    ; Dividir por 10 e colocar dígitos na pilha
+    mov ecx, 0
+    lea esi, [edi+20]   ; ESI aponta para o final do buffer
+    
 converter_int32_para_str_loop:
-
-
-
+    mov edx, 0
+    div ebx             ; EAX = EAX / 10, EDX = EAX % 10
+    add dl, '0'         ; Converter para ASCII
+    mov byte [esi-1], dl
+    dec esi
+    inc ecx
+    cmp eax, 0
+    jne converter_int32_para_str_loop
+    
 converter_int32_para_str_fim:
+    mov eax, esi        ; Retorna ponteiro para a string
+    mov esp, ebp
+    pop ebp
     ret 
 
 ;==============================================================================================
 
 
 converter_str_para_int_16:
-    ; Realiza a conersao do str recebido para int para calculos 16 bits
-
-
+    ; Converte string (ponteiro em [EBP+8]) para int16
+    ; Retorna valor em EAX
+    push ebp
+    mov ebp, esp
+    
+    mov esi, [ebp+8]    ; ESI = ponteiro para string
+    mov eax, 0         ; EAX = resultado
+    mov ecx, 1         ; ECX = multiplicador (para negativos)
+    
+    ; Verificar se é negativo
+    cmp byte [esi], '-'
+    jne converter_str_para_int_loop_16
+    mov ecx, -1
+    inc esi
+    
 converter_str_para_int_loop_16:
+    movzx edx, byte [esi]  ; EDX = caractere atual
+    cmp dl, 0              ; Fim da string?
+    je converter_str_para_int_fim_16
+    cmp dl, 10             ; Newline?
+    je converter_str_para_int_fim_16
     
+    ; Converter ASCII para dígito
+    sub dl, '0'
+    imul eax, eax, 10   ; EAX = EAX * 10
+    add eax, edx        ; EAX = EAX + dígito
     
-
+    inc esi
+    jmp converter_str_para_int_loop_16
+    
 converter_str_para_int_fim_16:
+    imul eax, ecx       ; Aplicar sinal se necessário
+    movsx eax, ax       ; Sign-extend para 32 bits
+    mov esp, ebp
+    pop ebp
     ret 
 
 
 ;==============================================================================================
 
 converter_str_para_int_32:
-    ; Realiza a conersao do str recebido para int para calculos 32 bits
-
-
+    ; Converte string (ponteiro em [EBP+8]) para int32
+    ; Retorna valor em EAX
+    push ebp
+    mov ebp, esp
+    
+    mov esi, [ebp+8]    ; ESI = ponteiro para string
+    mov eax, 0         ; EAX = resultado
+    mov ecx, 1         ; ECX = multiplicador (para negativos)
+    
+    ; Verificar se é negativo
+    cmp byte [esi], '-'
+    jne converter_str_para_int_loop_32
+    mov ecx, -1
+    inc esi
+    
 converter_str_para_int_loop_32:
+    movzx edx, byte [esi]  ; EDX = caractere atual
+    cmp dl, 0              ; Fim da string?
+    je converter_str_para_int_fim_32
+    cmp dl, 10             ; Newline?
+    je converter_str_para_int_fim_32
     
+    ; Converter ASCII para dígito
+    sub dl, '0'
+    imul eax, eax, 10   ; EAX = EAX * 10
+    add eax, edx        ; EAX = EAX + dígito
     
-
+    inc esi
+    jmp converter_str_para_int_loop_32
+    
 converter_str_para_int_fim_32:
-
+    imul eax, ecx       ; Aplicar sinal se necessário
+    mov esp, ebp
+    pop ebp
     ret
 
 ;==============================================================================================
