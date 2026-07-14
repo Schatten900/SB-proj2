@@ -77,18 +77,9 @@ global converter_str_para_int_32
 global sair
 
 
-extern soma16
-extern soma32
-extern multi16
-extern multi32
-extern exponenciacao16
-extern exponenciacao32
-extern subtracao16
-extern subtracao32
-extern divisao16
-extern divisao32
-extern mod16
-extern mod32
+extern soma
+extern multi
+extern exponenciacao
 
 ; ==================
 ; Função principal
@@ -179,20 +170,11 @@ loop_menu:
     cmp byte [menu_opcao], '1' 
     je opcao_soma
     
-    cmp byte [menu_opcao], '2'
-    je opcao_subtracao
-
     cmp byte [menu_opcao], '3'
     je opcao_mult
 
-    cmp byte [menu_opcao], '4'
-    je opcao_divisao
-
     cmp byte [menu_opcao], '5'
     je opcao_exponenciacao
-
-    cmp byte [menu_opcao], '6'
-    je opcao_mod
 
     cmp byte [menu_opcao], '7'
     je sair
@@ -223,7 +205,7 @@ opcao_soma:
     add esp,8
 
 
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 
@@ -240,46 +222,7 @@ opcao_soma16:
     add esp,8
 
 
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_subtracao:
-    ; passando o valor da precisao
-
-    cmp byte[precisao_usuario],'0'
-    je opcao_subtracao16
-
-    ; Realiza a subtracao com 32 bits
-
-    call ler_int32
-    push eax        ; num1
-
-    call ler_int32
-    push eax        ; num2
-
-    call subtracao32      ; eax = resultado da subtracao
-
-    add esp,8
-
-
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_subtracao16:
-
-    call ler_int16
-    push eax        ; num1
-
-    call ler_int16
-    push eax        ; num2
-
-    call subtracao16    ; eax = resultado da subtracao
-
-    add esp,8
-
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 
@@ -302,7 +245,7 @@ opcao_mult:
     add esp,12
 
 
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 
@@ -318,85 +261,7 @@ opcao_mult16:
 
     add esp,8
 
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_divisao:
-    ; passando o valor da precisao
-
-    cmp byte[precisao_usuario],'0'
-    je opcao_divisao16
-
-    ; Realiza a divisao com 32 bits
-
-    call ler_int32
-    push eax        ; num1
-
-    call ler_int32
-    push eax        ; num2
-
-    call divisao32      ; eax = resultado da divisao
-
-    add esp,8
-
-
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_divisao16:
-
-    call ler_int16
-    push eax        ; num1
-
-    call ler_int16
-    push eax        ; num2
-
-    call divisao16    ; eax = resultado da divisao
-
-    add esp,8
-
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_mod:
-    ; passando o valor da precisao
-
-    cmp byte[precisao_usuario],'0'
-    je opcao_mod16
-
-    ; Realiza o mod com 32 bits
-
-    call ler_int32
-    push eax        ; num1
-
-    call ler_int32
-    push eax        ; num2
-
-    call mod32      ; eax = resultado do mod
-
-    add esp,8
-
-
-    call mostrar_resultado
-    jmp loop_menu
-
-
-opcao_mod16:
-
-    call ler_int16
-    push eax        ; num1
-
-    call ler_int16
-    push eax        ; num2
-
-    call mod16    ; eax = resultado do mod
-
-    add esp,8
-
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 
@@ -416,7 +281,7 @@ opcao_exponenciacao:
     call exponenciacao32  ; eax = resultado da exponenciacao
     add esp,8
 
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 opcao_exponenciacao_16:
@@ -428,9 +293,9 @@ opcao_exponenciacao_16:
     push eax            ; salva o expoente
 
     call exponenciacao16
-    add esp,8
+    add esp 8
 
-    call mostrar_resultado
+    mostrar_resultado
     jmp loop_menu
 
 

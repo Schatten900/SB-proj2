@@ -108,7 +108,7 @@ expoente_negativo32:
     jmp trata_base
 
 expoente_negativo16:
-    movsx eax,word[ebp+12]  ; base
+    movsx eax,[ebp+12]  ; base
 
 trata_base:
 
