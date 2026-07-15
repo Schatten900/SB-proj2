@@ -16,8 +16,8 @@ subtracao32:
     mov ebp, esp         ; Passa o endereço da base
     ; Realiza a subtração com 32 bits
 
-    mov eax,[ebp+8]      ; eax = num2
-    sub eax,[ebp+12]     ; realiza num2 - num1 e salva em eax
+    mov eax,[ebp+12]      ; eax = num2
+    sub eax,[ebp+8]     ; realiza num2 - num1 e salva em eax
     
     jo overflow          ; Verifica se houve overflow
 
@@ -29,8 +29,8 @@ subtracao16:
     push ebp
     mov ebp,esp
 
-    mov ax,[ebp+8]       ; ax = num2
-    sub ax,[ebp+12]      ; realiza num2 - num1 e salva em ax
+    mov ax,[ebp+12]       ; ax = num2
+    sub ax,[ebp+8]      ; realiza num2 - num1 e salva em ax
    
     jo overflow          ; Verifica se houve overflow
 

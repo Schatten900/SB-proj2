@@ -75,9 +75,13 @@ loop_exponenciacao_16:
     cmp esi,0           ; Verifica se o expoente ja é 0
     je sair_loop_16
 
+    ; Limpa a parte alta para garantir que lixo não vá para a pilha
+    movsx ecx, ax       ; ecx = valor atual (sinalizado de 16 bits)
+    movsx edx, bx       ; edx = base (sinalizado de 16 bits)
+
     ; Chama a multiplicacao de 16 bits
-    push ax         ; Salva o valor atual
-    push bx         ; Salva a base 
+    push ecx         ; Salva o valor atual
+    push edx         ; Salva a base 
 
     call multi16    ; Realiza a multiplicacao
     add esp,8       ; Desempilha os dados
